@@ -12,11 +12,19 @@ I'll be writing the scanner and parser from scratch and then executing the synta
 
 This is my first time designing/implementing my own programming language, so a lot of the design/implementation decisions were made for the fun of it more than any real defensible reason. This language isn't mean to be particularly useful, but I tried to at least make sane decisions. The main inspiration is Go.
 
-Features:
+Overview:
 
 - Statically typed
 - Garbage collected
 - Supports structs but not classes
+
+Types:
+
+- Strings with `string`
+- Integers with `int`
+- Doubles with `double`
+- Booleans with `bool`
+- Lists with `list`
 
 Steps:
 

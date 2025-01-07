@@ -33,9 +33,12 @@ func runFile(path string) {
 
 func run(source string) {
 	// Scan
-	scan(source)
+	fmt.Printf("Scanning...\n\n")
+	tokens := scan(source)
+	printTokens()
 	// Parse
-
+	fmt.Printf("Parsing %d tokens...\n\n", len(tokens))
+	parse(tokens)
 	// Interpret
 }
 
@@ -45,8 +48,7 @@ func error(lexeme string, message string, column int, line int) {
 
 func report(lexeme string, message string, column int, line int) {
 	fmt.Println("Error: " + message)
-	fmt.Printf("   @ line %d, column %d\n\n", line, column)
+	fmt.Printf("   [line %d]\n\n", line)
 	fmt.Println("   " + lexeme)
 	fmt.Printf("   ^\n\n")
-	hadError = true
 }

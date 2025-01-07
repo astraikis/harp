@@ -32,58 +32,6 @@ var keywords = map[string]tokenType{
 	"bool":   BOOL_VAR,
 }
 
-type tokenType int
-
-const (
-	LEFT_PAREN tokenType = iota
-	RIGHT_PAREN
-	LEFT_BRACE
-	RIGHT_BRACE
-	LEFT_SQUARE
-	RIGHT_SQUARE
-	COMMA
-	DOT
-	MINUS
-	PLUS
-	SEMICOLON
-	SLASH
-	STAR
-
-	BANG
-	BANG_EQUAL
-	EQUAL
-	EQUAL_EQUAL
-	GREATER
-	GREATER_EQUAL
-	LESS
-	LESS_EQUAL
-
-	IDENTIFIER
-	STRING
-	INT
-	DOUBLE
-
-	AND
-	ELSE
-	FALSE
-	FUNC
-	FOR
-	IF
-	NULL
-	OR
-	RETURN
-	TRUE
-	WHILE
-	STRUCT
-
-	EOF
-
-	STRING_VAR
-	INT_VAR
-	DOUBLE_VAR
-	BOOL_VAR
-)
-
 type token struct {
 	Type    tokenType
 	Lexeme  string
@@ -105,7 +53,7 @@ func scan(sourceText string) []token {
 	}
 
 	tokens = append(tokens, token{Type: EOF, Lexeme: "", Literal: nil, Column: 1, Line: line})
-	fmt.Println(tokens)
+	// fmt.Println(tokens[len(tokens)-1])
 	return tokens
 }
 
@@ -175,6 +123,18 @@ func scanToken() {
 			addToken(LESS, "")
 			column += 1
 		}
+	case '/':
+		if match('/') {
+			for {
+				if peek() == '\n' || isAtEnd() {
+					break
+				}
+				advance()
+			}
+			column = 0
+		} else {
+			addToken(SLASH, "")
+		}
 	case ' ':
 		column += 1
 	case '\r':
@@ -188,7 +148,7 @@ func scanToken() {
 	default:
 		if unicode.IsDigit(c) {
 			number()
-		} else if unicode.IsLetter(c) {
+		} else if unicode.IsLetter(c) || c == '_' {
 			identifier()
 		} else {
 			if column != 1 {
@@ -236,7 +196,7 @@ func advance() rune {
 func identifier() {
 	for {
 		next := peek()
-		if !unicode.IsLetter(next) && !unicode.IsDigit(next) {
+		if !unicode.IsLetter(next) && !unicode.IsDigit(next) && next != '_' {
 			break
 		}
 
@@ -310,4 +270,14 @@ func peek() rune {
 		return rune('\u0000')
 	}
 	return rune(source[current])
+}
+
+func printTokens() {
+	for i := 0; i < len(tokens); i++ {
+		printToken(tokens[i])
+	}
+}
+
+func printToken(token token) {
+	fmt.Printf("%s %s\n", tokenTypesNames[token.Type], token.Lexeme)
 }

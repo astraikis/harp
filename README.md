@@ -31,3 +31,23 @@ Steps:
 - [ ] Scanner (in progress)
 - [ ] Parser
 - [ ] Interpreter
+
+---
+
+III`==.\_
+IIIIII//
+IIIII//
+IIII//
+III//
+II//
+--'
+
+---
+
+III`==.\_
+IIIIII//
+IIIII//
+IIII//
+III//
+
+---

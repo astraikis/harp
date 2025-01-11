@@ -53,7 +53,6 @@ func scan(sourceText string) []token {
 	}
 
 	tokens = append(tokens, token{Type: EOF, Lexeme: "", Literal: nil, Column: 1, Line: line})
-	// fmt.Println(tokens[len(tokens)-1])
 	return tokens
 }
 
@@ -154,7 +153,7 @@ func scanToken() {
 			if column != 1 {
 				column += 1
 			}
-			error(string(c), "Unexpected character.", column, line)
+			harpError(string(c), "Unexpected character.", column, line)
 		}
 	}
 }
@@ -172,7 +171,6 @@ func _string() {
 	}
 
 	if isAtEnd() {
-		// errorNoToken("Unterminated string", column, line)
 	}
 
 	advance()

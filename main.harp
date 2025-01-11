@@ -1,16 +1,4 @@
-// Comment.
-func main() {
-    string name = "jackson";
-    int num = 10;
-    double other_num = 10.5;
-    bool is_even = true;
-    string _override = "fjldsj";
+int a = 1250;
+int b = 900;
 
-    print("hi " + name);
-
-    while (is_even) {
-        num = num + 1;
-    }
-
-    list[int] nums = [1, 2, 3];
-}
+a + b;

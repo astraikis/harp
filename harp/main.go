@@ -38,12 +38,15 @@ func run(source string) {
 	printTokens()
 	// Parse
 	fmt.Printf("Parsing %d tokens...\n\n", len(tokens))
-	parse(tokens)
+	statements := parse(tokens)
+	printStatements()
 	// Interpret
+	interpret(statements)
 }
 
-func error(lexeme string, message string, column int, line int) {
+func harpError(lexeme string, message string, column int, line int) {
 	report(lexeme, message, column, line)
+	hadError = true
 }
 
 func report(lexeme string, message string, column int, line int) {

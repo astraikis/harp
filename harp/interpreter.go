@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math"
 	"reflect"
 	"strconv"
@@ -22,6 +23,8 @@ func evaluate(expr expr) interface{} {
 		return evaluateGroupingExpr(expr.(groupingExpr))
 	case "main.varExpr":
 		return evaluateVarExpr(expr.(varExpr))
+	case "main.assignExpr":
+		return evaluateAssignExpr(expr.(assignExpr))
 	}
 
 	return ""
@@ -113,6 +116,7 @@ func evaluateBinaryExpr(expr binaryExpr) interface{} {
 
 		switch expr.operator.Type {
 		case PLUS:
+			fmt.Println(leftInt + rightInt)
 			return leftInt + rightInt
 		case MINUS:
 			return leftInt - rightInt
@@ -136,6 +140,12 @@ func evaluateLiteralExpr(expr literalExpr) interface{} {
 
 func evaluateVarExpr(expr varExpr) interface{} {
 	return getValue(expr.name)
+}
+
+func evaluateAssignExpr(expr assignExpr) interface{} {
+	value := evaluate(expr.value)
+	assignValue(expr.name, value)
+	return value
 }
 
 func isFloat(value interface{}) bool {

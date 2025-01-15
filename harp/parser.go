@@ -59,7 +59,25 @@ func expressionStatement() stmt {
 }
 
 func expression() expr {
-	return equality()
+	return assignment()
+}
+
+func assignment() expr {
+	expr := equality()
+
+	if p_match([]tokenType{EQUAL}) {
+		equals := p_previous()
+		value := assignment()
+
+		if reflect.TypeOf(expr).String() == "main.varExpr" {
+			name := expr.(varExpr).name
+			return assignExpr{name: name, value: value}
+		}
+
+		harpError(equals.Lexeme, "Invalid assignment target.", 0, 0)
+	}
+
+	return expr
 }
 
 func equality() expr {
@@ -308,5 +326,39 @@ func printStatement(stmt expr, depth int) {
 		}
 		fmt.Printf("}\n")
 		fmt.Println("}")
+	case "main.assignExpr":
+		ae := stmt.(assignExpr)
+		for i := 0; i < depth; i++ {
+			fmt.Printf("   ")
+		}
+		fmt.Printf("Assignment expression {\n")
+		for i := 0; i < depth+1; i++ {
+			fmt.Printf("   ")
+		}
+		fmt.Printf(ae.name.Lexeme)
+		fmt.Printf(" { \n")
+		for i := 0; i < depth+1; i++ {
+			fmt.Printf("   ")
+		}
+		printStatement(ae.value, depth+1)
+		for i := 0; i < depth+1; i++ {
+			fmt.Printf("   ")
+		}
+		fmt.Printf("}\n")
+		fmt.Println("}")
+	case "main.exprStmt":
+		es := stmt.(exprStmt)
+		for i := 0; i < depth; i++ {
+			fmt.Printf("   ")
+		}
+		fmt.Printf("Expression statement {\n")
+		for i := 0; i < depth+1; i++ {
+			fmt.Printf("   ")
+		}
+		printStatement(es.expression, depth+1)
+		for i := 0; i < depth; i++ {
+			fmt.Printf("   ")
+		}
+		fmt.Printf("}\n")
 	}
 }

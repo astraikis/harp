@@ -33,13 +33,13 @@ func runFile(path string) {
 
 func run(source string) {
 	// Scan
-	fmt.Printf("Scanning...\n\n")
+	// fmt.Printf("Scanning...\n\n")
 	tokens := scan(source)
-	printTokens()
+	// printTokens()
 	// Parse
-	fmt.Printf("Parsing %d tokens...\n\n", len(tokens))
+	// fmt.Printf("Parsing %d tokens...\n\n", len(tokens))
 	statements := parse(tokens)
-	printStatements()
+	// printStatements()
 	// Interpret
 	interpret(statements)
 }

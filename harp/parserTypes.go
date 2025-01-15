@@ -3,6 +3,11 @@ package main
 type expr interface {
 }
 
+type assignExpr struct {
+	name  token
+	value expr
+}
+
 type binaryExpr struct {
 	left     expr
 	right    expr

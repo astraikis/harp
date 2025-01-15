@@ -13,3 +13,12 @@ func getValue(name token) interface{} {
 
 	return nil
 }
+
+func assignValue(name token, value interface{}) {
+	if _, ok := values[name.Lexeme]; ok {
+		values[name.Lexeme] = value
+		return
+	}
+
+	panic("Undefined variable.")
+}

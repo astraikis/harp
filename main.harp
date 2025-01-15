@@ -1,4 +1,4 @@
-int a = 1250;
-int b = 900;
+int a = 5;
+int b = a * 2;
 
 a + b;

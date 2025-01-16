@@ -1,12 +1,14 @@
-package main
+package interpreter
+
+import "github.com/astraikis/harp/internal/models"
 
 var values = map[string]interface{}{}
 
-func define(name string, value interface{}) {
+func defineValue(name string, value interface{}) {
 	values[name] = value
 }
 
-func getValue(name token) interface{} {
+func getValue(name models.Token) interface{} {
 	if val, ok := values[name.Lexeme]; ok {
 		return val
 	}
@@ -14,7 +16,7 @@ func getValue(name token) interface{} {
 	return nil
 }
 
-func assignValue(name token, value interface{}) {
+func assignValue(name models.Token, value interface{}) {
 	if _, ok := values[name.Lexeme]; ok {
 		values[name.Lexeme] = value
 		return

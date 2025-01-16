@@ -1,9 +1,17 @@
-package main
+package models
 
-type tokenType int
+type Token struct {
+	Type    TokenType
+	Lexeme  string
+	Literal interface{}
+	Column  int
+	Line    int
+}
+
+type TokenType int
 
 const (
-	LEFT_PAREN tokenType = iota
+	LEFT_PAREN TokenType = iota
 	RIGHT_PAREN
 	LEFT_BRACE
 	RIGHT_BRACE
@@ -52,7 +60,7 @@ const (
 	EOF
 )
 
-var tokenTypesNames = map[tokenType]string{
+var TokenTypesNames = map[TokenType]string{
 	LEFT_PAREN:   "LEFT_PAREN",
 	RIGHT_PAREN:  "RIGHT_PAREN",
 	LEFT_BRACE:   "LEFT_BRACE",
@@ -100,4 +108,47 @@ var tokenTypesNames = map[tokenType]string{
 	BOOL_VAR:   "BOOL_VAR",
 
 	EOF: "",
+}
+
+type Expr interface {
+}
+
+type AssignExpr struct {
+	Name  Token
+	Value Expr
+}
+
+type BinaryExpr struct {
+	Left     Expr
+	Right    Expr
+	Operator Token
+}
+
+type UnaryExpr struct {
+	Operator Token
+	Right    Expr
+}
+
+type LiteralExpr struct {
+	Literal interface{}
+}
+
+type GroupingExpr struct {
+	Expression Expr
+}
+
+type VarExpr struct {
+	Name Token
+}
+
+type Stmt interface {
+}
+
+type ExprStmt struct {
+	Expression Expr
+}
+
+type VarStmt struct {
+	Name        Token
+	Initializer Expr
 }

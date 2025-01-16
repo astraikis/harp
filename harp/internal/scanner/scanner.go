@@ -1,48 +1,42 @@
-package main
+package scanner
 
 import (
 	"fmt"
 	"strconv"
 	"unicode"
+
+	"github.com/astraikis/harp/internal/models"
 )
 
 var source string
-var tokens = []token{}
+var tokens = []models.Token{}
 var start int = 0
 var current int = 0
 var line int = 1
 var column int = 1
 
-var keywords = map[string]tokenType{
-	"and":    AND,
-	"else":   ELSE,
-	"false":  FALSE,
-	"func":   FUNC,
-	"for":    FOR,
-	"if":     IF,
-	"null":   NULL,
-	"or":     OR,
-	"return": RETURN,
-	"true":   TRUE,
-	"while":  WHILE,
-	"struct": STRUCT,
-	"string": STRING_VAR,
-	"int":    INT_VAR,
-	"double": DOUBLE_VAR,
-	"bool":   BOOL_VAR,
-}
-
-type token struct {
-	Type    tokenType
-	Lexeme  string
-	Literal interface{}
-	Column  int
-	Line    int
+var keywords = map[string]models.TokenType{
+	"and":    models.AND,
+	"else":   models.ELSE,
+	"false":  models.FALSE,
+	"func":   models.FUNC,
+	"for":    models.FOR,
+	"if":     models.IF,
+	"null":   models.NULL,
+	"or":     models.OR,
+	"return": models.RETURN,
+	"true":   models.TRUE,
+	"while":  models.WHILE,
+	"struct": models.STRUCT,
+	"string": models.STRING_VAR,
+	"int":    models.INT_VAR,
+	"double": models.DOUBLE_VAR,
+	"bool":   models.BOOL_VAR,
 }
 
 // scan walks over source and returns
 // a corresponding list of tokens.
-func scan(sourceText string) []token {
+func Scan(sourceText string) []models.Token {
 	source = sourceText
 	for {
 		if isAtEnd() {
@@ -52,7 +46,7 @@ func scan(sourceText string) []token {
 		scanToken()
 	}
 
-	tokens = append(tokens, token{Type: EOF, Lexeme: "", Literal: nil, Column: 1, Line: line})
+	tokens = append(tokens, models.Token{Type: models.EOF, Lexeme: "", Literal: nil, Column: 1, Line: line})
 	return tokens
 }
 
@@ -61,65 +55,65 @@ func scanToken() {
 	var c rune = advance()
 	switch c {
 	case '(':
-		addToken(LEFT_PAREN, "")
+		addToken(models.LEFT_PAREN, "")
 		column += 1
 	case ')':
-		addToken(RIGHT_PAREN, "")
+		addToken(models.RIGHT_PAREN, "")
 		column += 1
 	case '{':
-		addToken(LEFT_BRACE, "")
+		addToken(models.LEFT_BRACE, "")
 		column += 1
 	case '}':
-		addToken(RIGHT_BRACE, "")
+		addToken(models.RIGHT_BRACE, "")
 		column += 1
 	case ',':
-		addToken(COMMA, "")
+		addToken(models.COMMA, "")
 		column += 1
 	case '.':
-		addToken(DOT, "")
+		addToken(models.DOT, "")
 		column += 1
 	case '-':
-		addToken(MINUS, "")
+		addToken(models.MINUS, "")
 		column += 1
 	case '+':
-		addToken(PLUS, "")
+		addToken(models.PLUS, "")
 		column += 1
 	case ';':
-		addToken(SEMICOLON, "")
+		addToken(models.SEMICOLON, "")
 		column += 1
 	case '*':
-		addToken(STAR, "")
+		addToken(models.STAR, "")
 		column += 1
 	case '!':
 		if match('=') {
-			addToken(BANG_EQUAL, "")
+			addToken(models.BANG_EQUAL, "")
 			column += 2
 		} else {
-			addToken(BANG, "")
+			addToken(models.BANG, "")
 			column += 1
 		}
 	case '=':
 		if match('=') {
-			addToken(EQUAL_EQUAL, "")
+			addToken(models.EQUAL_EQUAL, "")
 			column += 2
 		} else {
-			addToken(EQUAL, "")
+			addToken(models.EQUAL, "")
 			column += 1
 		}
 	case '>':
 		if match('=') {
-			addToken(GREATER_EQUAL, "")
+			addToken(models.GREATER_EQUAL, "")
 			column += 2
 		} else {
-			addToken(GREATER, "")
+			addToken(models.GREATER, "")
 			column += 1
 		}
 	case '<':
 		if match('=') {
-			addToken(LESS_EQUAL, "")
+			addToken(models.LESS_EQUAL, "")
 			column += 2
 		} else {
-			addToken(LESS, "")
+			addToken(models.LESS, "")
 			column += 1
 		}
 	case '/':
@@ -132,7 +126,7 @@ func scanToken() {
 			}
 			column = 0
 		} else {
-			addToken(SLASH, "")
+			addToken(models.SLASH, "")
 		}
 	case ' ':
 		column += 1
@@ -153,7 +147,7 @@ func scanToken() {
 			if column != 1 {
 				column += 1
 			}
-			harpError(string(c), "Unexpected character.", column, line)
+			// Error
 		}
 	}
 }
@@ -175,12 +169,12 @@ func _string() {
 
 	advance()
 
-	addToken(STRING, source[start:current])
+	addToken(models.STRING, source[start:current])
 }
 
 // addToken adds a token to tokens.
-func addToken[T any](tokenType tokenType, literal T) {
-	tokens = append(tokens, token{Type: tokenType, Lexeme: string(source[start:current]), Literal: literal, Column: column, Line: line})
+func addToken[T any](tokenType models.TokenType, literal T) {
+	tokens = append(tokens, models.Token{Type: tokenType, Lexeme: string(source[start:current]), Literal: literal, Column: column, Line: line})
 }
 
 // advance consumes and returns the next rune.
@@ -204,7 +198,7 @@ func identifier() {
 	text := source[start:current]
 	_type, exists := keywords[text]
 	if !exists {
-		_type = IDENTIFIER
+		_type = models.IDENTIFIER
 	}
 	addToken(_type, text)
 }
@@ -254,9 +248,9 @@ func number() {
 
 	if isDouble {
 		val, _ := strconv.ParseFloat(source[start:current], 64)
-		addToken(DOUBLE, val)
+		addToken(models.DOUBLE, val)
 	} else {
-		addToken(INT, source[start:current])
+		addToken(models.INT, source[start:current])
 	}
 }
 
@@ -270,12 +264,12 @@ func peek() rune {
 	return rune(source[current])
 }
 
-func printTokens() {
+func PrintTokens(tokens []models.Token) {
 	for i := 0; i < len(tokens); i++ {
 		printToken(tokens[i])
 	}
 }
 
-func printToken(token token) {
-	fmt.Printf("%s %s\n", tokenTypesNames[token.Type], token.Lexeme)
+func printToken(token models.Token) {
+	fmt.Printf("%s %s\n", models.TokenTypesNames[token.Type], token.Lexeme)
 }

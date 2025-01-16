@@ -152,3 +152,7 @@ type VarStmt struct {
 	Name        Token
 	Initializer Expr
 }
+
+type BlockStmt struct {
+	Statements []Stmt
+}

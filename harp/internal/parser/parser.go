@@ -50,7 +50,25 @@ func varDeclaration() models.Stmt {
 }
 
 func statement() models.Stmt {
+	if match([]models.TokenType{models.LEFT_BRACE}) {
+		return models.BlockStmt{Statements: block()}
+	}
 	return expressionStatement()
+}
+
+func block() []models.Stmt {
+	var blockStmts = []models.Stmt{}
+
+	for {
+		if check(models.RIGHT_BRACE) || isAtEnd() {
+			break
+		}
+
+		blockStmts = append(blockStmts, declaration())
+	}
+
+	consume([]models.TokenType{models.RIGHT_BRACE}, "Expect '}' after block.")
+	return blockStmts
 }
 
 func expressionStatement() models.Stmt {

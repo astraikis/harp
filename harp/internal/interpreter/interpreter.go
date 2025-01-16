@@ -1,12 +1,16 @@
 package interpreter
 
 import (
+	"fmt"
 	"math"
 	"reflect"
 	"strconv"
 
 	"github.com/astraikis/harp/internal/models"
 )
+
+var globals = environment{values: map[string]interface{}{}, parent: nil}
+var currEnvironment = globals
 
 func Interpret(statements []models.Stmt) {
 	for _, stmt := range statements {
@@ -20,6 +24,8 @@ func execute(stmt models.Stmt) {
 		executeExprStmt(stmt.(models.ExprStmt))
 	case "models.VarStmt":
 		executeVarStmt(stmt.(models.VarStmt))
+	case "models.BlockStmt":
+		executeBlockStmt(stmt.(models.BlockStmt).Statements, environment{values: map[string]interface{}{}, parent: &currEnvironment})
 	}
 }
 
@@ -33,7 +39,18 @@ func executeVarStmt(stmt models.VarStmt) {
 		value = evaluate(stmt.Initializer)
 	}
 
-	defineValue(stmt.Name.Lexeme, value)
+	defineValue(stmt.Name.Lexeme, value, currEnvironment)
+}
+
+func executeBlockStmt(blockStmts []models.Stmt, blockEnvironment environment) {
+	prevEnvironment := currEnvironment
+	currEnvironment = blockEnvironment
+
+	for _, stmt := range blockStmts {
+		execute(stmt)
+	}
+
+	currEnvironment = prevEnvironment
 }
 
 func evaluate(expr models.Expr) interface{} {
@@ -117,6 +134,7 @@ func evaluateBinaryExpr(expr models.BinaryExpr) interface{} {
 
 		switch expr.Operator.Type {
 		case models.PLUS:
+			fmt.Println(leftInt + rightInt)
 			return leftInt + rightInt
 		case models.MINUS:
 			return leftInt - rightInt
@@ -139,12 +157,12 @@ func evaluateLiteralExpr(expr models.LiteralExpr) interface{} {
 }
 
 func evaluateVarExpr(expr models.VarExpr) interface{} {
-	return getValue(expr.Name)
+	return getValue(expr.Name, currEnvironment)
 }
 
 func evaluateAssignExpr(expr models.AssignExpr) interface{} {
 	value := evaluate(expr.Value)
-	assignValue(expr.Name, value)
+	assignValue(expr.Name, value, currEnvironment)
 	return value
 }
 

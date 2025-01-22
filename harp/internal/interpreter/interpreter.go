@@ -9,7 +9,7 @@ import (
 	"github.com/astraikis/harp/internal/models"
 )
 
-var globals = environment{values: map[string]interface{}{}, parent: nil}
+var globals = &environment{values: map[string]interface{}{}, parent: nil}
 var currEnvironment = globals
 
 func Interpret(statements []models.Stmt) {
@@ -25,7 +25,9 @@ func execute(stmt models.Stmt) {
 	case "models.VarStmt":
 		executeVarStmt(stmt.(models.VarStmt))
 	case "models.BlockStmt":
-		executeBlockStmt(stmt.(models.BlockStmt).Statements, environment{values: map[string]interface{}{}, parent: &currEnvironment})
+		executeBlockStmt(stmt.(models.BlockStmt).Statements, &environment{values: map[string]interface{}{}, parent: currEnvironment})
+	case "models.IfStmt":
+		executeIfStmt(stmt.(models.IfStmt))
 	}
 }
 
@@ -42,7 +44,7 @@ func executeVarStmt(stmt models.VarStmt) {
 	defineValue(stmt.Name.Lexeme, value, currEnvironment)
 }
 
-func executeBlockStmt(blockStmts []models.Stmt, blockEnvironment environment) {
+func executeBlockStmt(blockStmts []models.Stmt, blockEnvironment *environment) {
 	prevEnvironment := currEnvironment
 	currEnvironment = blockEnvironment
 
@@ -51,6 +53,14 @@ func executeBlockStmt(blockStmts []models.Stmt, blockEnvironment environment) {
 	}
 
 	currEnvironment = prevEnvironment
+}
+
+func executeIfStmt(stmt models.IfStmt) {
+	if isTruthy(evaluate(stmt.Condition)) {
+		execute(stmt.ThenBranch)
+	} else if stmt.ElseBranch != nil {
+		execute(stmt.ElseBranch)
+	}
 }
 
 func evaluate(expr models.Expr) interface{} {
@@ -65,14 +75,39 @@ func evaluate(expr models.Expr) interface{} {
 		return evaluateVarExpr(expr.(models.VarExpr))
 	case "models.AssignExpr":
 		return evaluateAssignExpr(expr.(models.AssignExpr))
+	case "models.LogicExpr":
+		return evaluateLogicExpr(expr.(models.LogicExpr))
 	}
 
 	return ""
 }
 
+func evaluateLogicExpr(expr models.LogicExpr) interface{} {
+	left := evaluate(expr.Left)
+
+	if expr.Operator.Type == models.OR {
+		if isTruthy(left) {
+			return left
+		}
+	} else {
+		if !isTruthy(left) {
+			return left
+		}
+	}
+
+	return evaluate(expr.Right)
+}
+
 func evaluateBinaryExpr(expr models.BinaryExpr) interface{} {
 	left := evaluate(expr.Left)
 	right := evaluate(expr.Right)
+
+	switch expr.Operator.Type {
+	case models.EQUAL_EQUAL:
+		return left == right
+	case models.BANG_EQUAL:
+		return left != right
+	}
 
 	if isFloat(left) || isFloat(right) {
 		// Evaluate as float.
@@ -186,3 +221,35 @@ func isFloat(value interface{}) bool {
 func isString(value interface{}) bool {
 	return reflect.TypeOf(value) == reflect.TypeOf("")
 }
+
+func isTruthy(value interface{}) bool {
+	if value == nil {
+		return false
+	}
+
+	if boolValue, ok := value.(bool); ok {
+		return boolValue
+	}
+
+	return true
+}
+
+// func isEqual(left interface{}, right interface{}) bool {
+// 	// if boolLeft, ok := left.(bool); ok {
+// 	// 	if boolRight, ok := right.(bool); ok {
+// 	// 		return boolLeft == boolRight
+// 	// 	} else {
+// 	// 		return false
+// 	// 	}
+// 	// }
+
+// 	// if strLeft, ok := left.(string); ok {
+// 	// 	if strRight, ok := right.(bool); ok {
+// 	// 		return boolLeft == boolRight
+// 	// 	} else {
+// 	// 		return false
+// 	// 	}
+// 	// }
+
+// 	return left == right
+// }

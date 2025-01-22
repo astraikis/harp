@@ -141,6 +141,12 @@ type VarExpr struct {
 	Name Token
 }
 
+type LogicExpr struct {
+	Left     Expr
+	Operator Token
+	Right    Expr
+}
+
 type Stmt interface {
 }
 
@@ -155,4 +161,10 @@ type VarStmt struct {
 
 type BlockStmt struct {
 	Statements []Stmt
+}
+
+type IfStmt struct {
+	Condition  Expr
+	ThenBranch Stmt
+	ElseBranch Stmt
 }

@@ -50,10 +50,27 @@ func varDeclaration() models.Stmt {
 }
 
 func statement() models.Stmt {
+	if match([]models.TokenType{models.IF}) {
+		return ifStatement()
+	}
 	if match([]models.TokenType{models.LEFT_BRACE}) {
 		return models.BlockStmt{Statements: block()}
 	}
 	return expressionStatement()
+}
+
+func ifStatement() models.Stmt {
+	consume([]models.TokenType{models.LEFT_PAREN}, "Expect '(' after 'if'.")
+	condition := expression()
+	consume([]models.TokenType{models.RIGHT_PAREN}, "Expect ')' after 'if'.")
+
+	thenBranch := statement()
+	var elseBranch models.Stmt
+	if match([]models.TokenType{models.ELSE}) {
+		elseBranch = statement()
+	}
+
+	return models.IfStmt{Condition: condition, ThenBranch: thenBranch, ElseBranch: elseBranch}
 }
 
 func block() []models.Stmt {
@@ -82,13 +99,13 @@ func expression() models.Expr {
 }
 
 func assignment() models.Expr {
-	expr := equality()
+	expr := or()
 
 	if match([]models.TokenType{models.EQUAL}) {
 		equals := previous()
 		value := assignment()
 
-		if reflect.TypeOf(expr).String() == "models.varExpr" {
+		if reflect.TypeOf(expr).String() == "models.VarExpr" {
 			name := expr.(models.VarExpr).Name
 			return models.AssignExpr{Name: name, Value: value}
 		}
@@ -96,6 +113,38 @@ func assignment() models.Expr {
 		// Error
 		if equals == value {
 		}
+	}
+
+	return expr
+}
+
+func or() models.Expr {
+	expr := and()
+
+	for {
+		if !match([]models.TokenType{models.OR}) {
+			break
+		}
+
+		operator := previous()
+		right := and()
+		expr = models.LogicExpr{Left: expr, Operator: operator, Right: right}
+	}
+
+	return expr
+}
+
+func and() models.Expr {
+	expr := equality()
+
+	for {
+		if !match([]models.TokenType{models.AND}) {
+			break
+		}
+
+		operator := previous()
+		right := equality()
+		expr = models.LogicExpr{Left: expr, Operator: operator, Right: right}
 	}
 
 	return expr

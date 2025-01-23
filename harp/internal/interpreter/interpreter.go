@@ -28,6 +28,8 @@ func execute(stmt models.Stmt) {
 		executeBlockStmt(stmt.(models.BlockStmt).Statements, &environment{values: map[string]interface{}{}, parent: currEnvironment})
 	case "models.IfStmt":
 		executeIfStmt(stmt.(models.IfStmt))
+	case "models.WhileStmt":
+		executeWhileStmt(stmt.(models.WhileStmt))
 	}
 }
 
@@ -60,6 +62,15 @@ func executeIfStmt(stmt models.IfStmt) {
 		execute(stmt.ThenBranch)
 	} else if stmt.ElseBranch != nil {
 		execute(stmt.ElseBranch)
+	}
+}
+
+func executeWhileStmt(stmt models.WhileStmt) {
+	for {
+		if !isTruthy(evaluate(stmt.Condition)) {
+			break
+		}
+		execute(stmt.Body)
 	}
 }
 
@@ -142,6 +153,14 @@ func evaluateBinaryExpr(expr models.BinaryExpr) interface{} {
 			return leftFloat * rightFloat
 		case models.SLASH:
 			return leftFloat / rightFloat
+		case models.LESS:
+			return leftFloat < rightFloat
+		case models.LESS_EQUAL:
+			return leftFloat <= rightFloat
+		case models.GREATER:
+			return leftFloat > rightFloat
+		case models.GREATER_EQUAL:
+			return leftFloat >= rightFloat
 		}
 	} else {
 		// Evaluate as int.
@@ -177,6 +196,14 @@ func evaluateBinaryExpr(expr models.BinaryExpr) interface{} {
 			return leftInt * rightInt
 		case models.SLASH:
 			return leftInt / rightInt
+		case models.LESS:
+			return leftInt < rightInt
+		case models.LESS_EQUAL:
+			return leftInt <= rightInt
+		case models.GREATER:
+			return leftInt > rightInt
+		case models.GREATER_EQUAL:
+			return leftInt >= rightInt
 		}
 	}
 

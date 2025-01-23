@@ -56,10 +56,71 @@ func statement() models.Stmt {
 	if match([]models.TokenType{models.LEFT_BRACE}) {
 		return models.BlockStmt{Statements: block()}
 	}
+	if match([]models.TokenType{models.WHILE}) {
+		return whileStatement()
+	}
+	if match([]models.TokenType{models.FOR}) {
+		return forStatement()
+	}
 	return expressionStatement()
 }
 
-func ifStatement() models.Stmt {
+func forStatement() models.Stmt {
+	consume([]models.TokenType{models.LEFT_PAREN}, "Expect '(' after for.")
+
+	var initializer models.Stmt
+	if match([]models.TokenType{models.INT_VAR, models.DOUBLE_VAR, models.BOOL_VAR, models.STRING_VAR}) {
+		initializer = varDeclaration()
+	} else {
+		initializer = expressionStatement()
+	}
+
+	var condition models.Expr
+	if !check(models.SEMICOLON) {
+		condition = expression()
+	} else {
+		condition = nil
+	}
+
+	consume([]models.TokenType{models.SEMICOLON}, "Expect ';' after loop condition.")
+
+	var increment models.Expr
+	if !check(models.RIGHT_PAREN) {
+		increment = expression()
+	} else {
+		increment = nil
+	}
+
+	consume([]models.TokenType{models.RIGHT_PAREN}, "Expect ')' after for clauses.")
+
+	body := statement()
+
+	if increment != nil {
+		body = models.BlockStmt{Statements: []models.Stmt{body, models.ExprStmt{Expression: increment}}}
+	}
+
+	if condition == nil {
+		condition = models.LiteralExpr{Literal: true}
+	}
+	body = models.WhileStmt{Condition: condition, Body: body}
+
+	if initializer != nil {
+		body = models.BlockStmt{Statements: []models.Stmt{initializer, body}}
+	}
+
+	return body
+}
+
+func whileStatement() models.WhileStmt {
+	consume([]models.TokenType{models.LEFT_PAREN}, "Expect '(' after while.")
+	condition := expression()
+	consume([]models.TokenType{models.RIGHT_PAREN}, "Expect ')' after while condition.")
+	body := statement()
+
+	return models.WhileStmt{Condition: condition, Body: body}
+}
+
+func ifStatement() models.IfStmt {
 	consume([]models.TokenType{models.LEFT_PAREN}, "Expect '(' after 'if'.")
 	condition := expression()
 	consume([]models.TokenType{models.RIGHT_PAREN}, "Expect ')' after 'if'.")

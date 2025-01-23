@@ -1,0 +1,18 @@
+// Iterative Fibonacci Sequence
+
+int a = 0;
+int b = 1;
+int i = 1;
+
+print(a);
+while (a < 1000000000000000000) {
+    int temp = a;
+    a = b;
+    b = temp + b;
+    i = i + 1;
+    print(a);
+}
+
+print();
+print("Fibonacci numbers calculated:");
+print(i);

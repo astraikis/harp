@@ -1,3 +1,10 @@
-for (int i = 0; i < 5; i = i + 1) {
-    i + 0;
+int a = 0;
+int b = 1;
+
+print(a);
+while (a < 500000) {
+    int temp = a;
+    a = b;
+    b = temp + b;
+    print(a);
 }

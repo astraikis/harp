@@ -1,7 +1,6 @@
 package interpreter
 
 import (
-	"fmt"
 	"math"
 	"reflect"
 	"strconv"
@@ -13,6 +12,9 @@ var globals = &environment{values: map[string]interface{}{}, parent: nil}
 var currEnvironment = globals
 
 func Interpret(statements []models.Stmt) {
+	defineValue("clock", models.Clock{}, currEnvironment)
+	defineValue("print", models.Print{}, currEnvironment)
+
 	for _, stmt := range statements {
 		execute(stmt)
 	}
@@ -88,9 +90,27 @@ func evaluate(expr models.Expr) interface{} {
 		return evaluateAssignExpr(expr.(models.AssignExpr))
 	case "models.LogicExpr":
 		return evaluateLogicExpr(expr.(models.LogicExpr))
+	case "models.CallExpr":
+		return evaluateCallExpr(expr.(models.CallExpr))
 	}
 
 	return ""
+}
+
+func evaluateCallExpr(expr models.CallExpr) interface{} {
+	callee := evaluate(expr.Callee)
+
+	arguments := []models.Expr{}
+	for i := 0; i < len(expr.Arguments); i++ {
+		arguments = append(arguments, evaluate(expr.Arguments[i]))
+	}
+
+	function := callee.(models.Callable)
+	if len(arguments) != function.Arity() {
+		// Error
+	}
+
+	return function.Call(arguments)
 }
 
 func evaluateLogicExpr(expr models.LogicExpr) interface{} {
@@ -188,7 +208,6 @@ func evaluateBinaryExpr(expr models.BinaryExpr) interface{} {
 
 		switch expr.Operator.Type {
 		case models.PLUS:
-			fmt.Println(leftInt + rightInt)
 			return leftInt + rightInt
 		case models.MINUS:
 			return leftInt - rightInt

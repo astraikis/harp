@@ -282,7 +282,46 @@ func unary() models.Expr {
 		return models.UnaryExpr{Operator: operator, Right: right}
 	}
 
-	return primary()
+	return call()
+}
+
+func call() models.Expr {
+	expr := primary()
+
+	for {
+		if !match([]models.TokenType{models.LEFT_PAREN}) {
+			break
+		}
+
+		expr = finishCall(expr)
+	}
+
+	return expr
+}
+
+func finishCall(callee models.Expr) models.Expr {
+	arguments := []models.Expr{}
+
+	if !check(models.RIGHT_PAREN) {
+		arguments = append(arguments, expression())
+
+		for {
+			if !match([]models.TokenType{models.COMMA}) {
+				break
+			}
+			if len(arguments) >= 255 {
+				// Error
+			}
+			arguments = append(arguments, expression())
+		}
+	}
+
+	paren, err := consume([]models.TokenType{models.RIGHT_PAREN}, "Expect ')' after arguments.")
+	if err != nil {
+		sync()
+	}
+
+	return models.CallExpr{Callee: callee, Paren: *paren, Arguments: arguments}
 }
 
 func primary() models.Expr {

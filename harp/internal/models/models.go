@@ -1,5 +1,10 @@
 package models
 
+import (
+	"fmt"
+	"time"
+)
+
 type Token struct {
 	Type    TokenType
 	Lexeme  string
@@ -147,6 +152,12 @@ type LogicExpr struct {
 	Right    Expr
 }
 
+type CallExpr struct {
+	Callee    Expr
+	Paren     Token
+	Arguments []Expr
+}
+
 type Stmt interface {
 }
 
@@ -172,4 +183,34 @@ type IfStmt struct {
 type WhileStmt struct {
 	Condition Expr
 	Body      Stmt
+}
+
+type Callable interface {
+	Call([]Expr) interface{}
+	Arity() int
+}
+
+type Clock struct{}
+
+func (c Clock) Call(arguments []Expr) interface{} {
+	return int(time.Now().UnixMilli())
+}
+
+func (c Clock) Arity() int {
+	return 0
+}
+
+type Print struct{}
+
+func (p Print) Call(arguments []Expr) interface{} {
+	if len(arguments) == 0 {
+		fmt.Println()
+	} else {
+		fmt.Println(arguments[0])
+	}
+	return nil
+}
+
+func (p Print) Arity() int {
+	return 1
 }

@@ -49,7 +49,7 @@ Features:
   - [x] While loops
 - Functions:
   - [x] Calls
-  - [ ] Declarations
+  - [x] Declarations
   - [ ] Static return types
   - [ ] Function overloads
 - Standard library:

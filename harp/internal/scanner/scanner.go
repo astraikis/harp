@@ -55,16 +55,16 @@ func scanToken() {
 	var c rune = advance()
 	switch c {
 	case '(':
-		addToken(models.LEFT_PAREN, "")
+		addToken(models.LeftParen, "")
 		column += 1
 	case ')':
-		addToken(models.RIGHT_PAREN, "")
+		addToken(models.RightParen, "")
 		column += 1
 	case '{':
-		addToken(models.LEFT_BRACE, "")
+		addToken(models.LeftBrace, "")
 		column += 1
 	case '}':
-		addToken(models.RIGHT_BRACE, "")
+		addToken(models.RightBrace, "")
 		column += 1
 	case ',':
 		addToken(models.COMMA, "")

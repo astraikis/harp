@@ -16,10 +16,10 @@ type Token struct {
 type TokenType int
 
 const (
-	LEFT_PAREN TokenType = iota
-	RIGHT_PAREN
-	LEFT_BRACE
-	RIGHT_BRACE
+	LeftParen TokenType = iota
+	RightParen
+	LeftBrace
+	RightBrace
 	LEFT_SQUARE
 	RIGHT_SQUARE
 	COMMA
@@ -66,10 +66,10 @@ const (
 )
 
 var TokenTypesNames = map[TokenType]string{
-	LEFT_PAREN:   "LEFT_PAREN",
-	RIGHT_PAREN:  "RIGHT_PAREN",
-	LEFT_BRACE:   "LEFT_BRACE",
-	RIGHT_BRACE:  "RIGHT_BRACE",
+	LeftParen:    "LEFT_PAREN",
+	RightParen:   "RIGHT_PAREN",
+	LeftBrace:    "LEFT_BRACE",
+	RightBrace:   "RIGHT_BRACE",
 	LEFT_SQUARE:  "LEFT_SQUARE",
 	RIGHT_SQUARE: "RIGHT_SQUARE",
 	COMMA:        "COMMA",
@@ -183,6 +183,21 @@ type IfStmt struct {
 type WhileStmt struct {
 	Condition Expr
 	Body      Stmt
+}
+
+type FuncStmt struct {
+	Name   Token
+	Params []FuncParam
+	Body   []Stmt
+}
+
+type ErrorStmt struct{}
+
+type ErrorExpr struct{}
+
+type FuncParam struct {
+	Type TokenType
+	Name string
 }
 
 type Callable interface {

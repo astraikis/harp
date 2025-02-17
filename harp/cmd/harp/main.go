@@ -29,6 +29,13 @@ func runFile(path string) {
 
 func run(source string) {
 	tokens := scanner.Scan(source)
-	stmts := parser.Parse(tokens)
+
+	stmts, parseErrors := parser.Parse(tokens)
+	if parseErrors != nil {
+		for _, parseError := range parseErrors {
+			fmt.Println(parseError.Error())
+		}
+	}
+
 	interpreter.Interpret(stmts)
 }

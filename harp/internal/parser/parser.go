@@ -1,19 +1,19 @@
 package parser
 
 import (
-	"errors"
+	"fmt"
 	"reflect"
 
 	"github.com/astraikis/harp/internal/models"
 )
 
-var tokens = []models.Token{}
-var stmts = []models.Stmt{}
+var tokens []models.Token
+var stmts []models.Stmt
 var current = 0
 
 // Parse parses a list of tokens and returns
 // the corresponding list of stmts.
-func Parse(scannedTokens []models.Token) []models.Stmt {
+func Parse(scannedTokens []models.Token) ([]models.Stmt, []error) {
 	tokens = scannedTokens
 	for {
 		if isAtEnd() {
@@ -23,21 +23,76 @@ func Parse(scannedTokens []models.Token) []models.Stmt {
 		stmts = append(stmts, next)
 	}
 
-	return stmts
+	return stmts, parseErrors
 }
 
 func declaration() models.Stmt {
 	if match([]models.TokenType{models.INT_VAR, models.DOUBLE_VAR, models.BOOL_VAR, models.STRING_VAR}) {
 		return varDeclaration()
 	}
+	if match([]models.TokenType{models.FUNC}) {
+		return function()
+	}
 
 	return statement()
+}
+
+func function() models.Stmt {
+	name, err := consume([]models.TokenType{models.IDENTIFIER}, "Expect function name.")
+	if err != nil {
+		return models.ErrorStmt{}
+	}
+
+	_, err = consume([]models.TokenType{models.LeftParen}, "Expect '(' after function name.")
+	if err != nil {
+		return models.ErrorStmt{}
+	}
+
+	var parameters []models.FuncParam
+	if !check(models.RightParen) {
+		paramType, err := consume([]models.TokenType{models.STRING_VAR, models.INT_VAR, models.DOUBLE_VAR, models.BOOL_VAR}, "Expect parameter name.")
+		if err != nil {
+			return models.ErrorStmt{}
+		}
+
+		paramName, err := consume([]models.TokenType{models.IDENTIFIER}, "Expect parameter name.")
+		if err != nil {
+			return models.ErrorStmt{}
+		}
+
+		parameters = append(parameters, models.FuncParam{Type: paramType.Type, Name: paramName.Lexeme})
+
+		for {
+			if !match([]models.TokenType{models.COMMA}) {
+				break
+			}
+
+			paramType, err := consume([]models.TokenType{models.STRING_VAR, models.INT_VAR, models.DOUBLE_VAR, models.BOOL_VAR}, "Expect parameter name.")
+			if err != nil {
+				return models.ErrorStmt{}
+			}
+
+			paramName, err := consume([]models.TokenType{models.IDENTIFIER}, "Expect parameter name.")
+			if err != nil {
+				return models.ErrorStmt{}
+			}
+
+			parameters = append(parameters, models.FuncParam{Type: paramType.Type, Name: paramName.Lexeme})
+		}
+	}
+
+	fmt.Println(parameters)
+	_, _ = consume([]models.TokenType{models.RightParen}, "Expect ')' after function parameters.")
+	_, _ = consume([]models.TokenType{models.LeftBrace}, "Expect '{' before function body.")
+
+	body := block()
+	return models.FuncStmt{Name: *name, Params: parameters, Body: body}
 }
 
 func varDeclaration() models.Stmt {
 	name, err := consume([]models.TokenType{models.IDENTIFIER}, "Expect variable name.")
 	if err != nil {
-		panic(err)
+		return models.ErrorStmt{}
 	}
 
 	var initializer models.Expr
@@ -45,7 +100,7 @@ func varDeclaration() models.Stmt {
 		initializer = expression()
 	}
 
-	consume([]models.TokenType{models.SEMICOLON}, "Expect ';' after variable declaration.")
+	_, _ = consume([]models.TokenType{models.SEMICOLON}, "Expect ';' after variable declaration.")
 	return models.VarStmt{Name: *name, Initializer: initializer}
 }
 
@@ -53,7 +108,7 @@ func statement() models.Stmt {
 	if match([]models.TokenType{models.IF}) {
 		return ifStatement()
 	}
-	if match([]models.TokenType{models.LEFT_BRACE}) {
+	if match([]models.TokenType{models.LeftBrace}) {
 		return models.BlockStmt{Statements: block()}
 	}
 	if match([]models.TokenType{models.WHILE}) {
@@ -66,7 +121,10 @@ func statement() models.Stmt {
 }
 
 func forStatement() models.Stmt {
-	consume([]models.TokenType{models.LEFT_PAREN}, "Expect '(' after for.")
+	_, err := consume([]models.TokenType{models.LeftParen}, "Expect '(' after for.")
+	if err != nil {
+		return models.ErrorStmt{}
+	}
 
 	var initializer models.Stmt
 	if match([]models.TokenType{models.INT_VAR, models.DOUBLE_VAR, models.BOOL_VAR, models.STRING_VAR}) {
@@ -82,16 +140,16 @@ func forStatement() models.Stmt {
 		condition = nil
 	}
 
-	consume([]models.TokenType{models.SEMICOLON}, "Expect ';' after loop condition.")
+	_, _ = consume([]models.TokenType{models.SEMICOLON}, "Expect ';' after loop condition.")
 
 	var increment models.Expr
-	if !check(models.RIGHT_PAREN) {
+	if !check(models.RightParen) {
 		increment = expression()
 	} else {
 		increment = nil
 	}
 
-	consume([]models.TokenType{models.RIGHT_PAREN}, "Expect ')' after for clauses.")
+	_, _ = consume([]models.TokenType{models.RightParen}, "Expect ')' after for clauses.")
 
 	body := statement()
 
@@ -111,19 +169,34 @@ func forStatement() models.Stmt {
 	return body
 }
 
-func whileStatement() models.WhileStmt {
-	consume([]models.TokenType{models.LEFT_PAREN}, "Expect '(' after while.")
+func whileStatement() models.Stmt {
+	_, err := consume([]models.TokenType{models.LeftParen}, "Expect '(' after while.")
+	if err != nil {
+		return models.ErrorStmt{}
+	}
+
 	condition := expression()
-	consume([]models.TokenType{models.RIGHT_PAREN}, "Expect ')' after while condition.")
+	_, err = consume([]models.TokenType{models.RightParen}, "Expect ')' after while condition.")
+	if err != nil {
+		return models.ErrorStmt{}
+	}
+
 	body := statement()
 
 	return models.WhileStmt{Condition: condition, Body: body}
 }
 
-func ifStatement() models.IfStmt {
-	consume([]models.TokenType{models.LEFT_PAREN}, "Expect '(' after 'if'.")
+func ifStatement() models.Stmt {
+	_, err := consume([]models.TokenType{models.LeftParen}, "Expect '(' after 'if'.")
+	if err != nil {
+		return models.ErrorStmt{}
+	}
+
 	condition := expression()
-	consume([]models.TokenType{models.RIGHT_PAREN}, "Expect ')' after 'if'.")
+	_, err = consume([]models.TokenType{models.RightParen}, "Expect ')' after 'if'.")
+	if err != nil {
+		return models.ErrorStmt{}
+	}
 
 	thenBranch := statement()
 	var elseBranch models.Stmt
@@ -138,20 +211,29 @@ func block() []models.Stmt {
 	var blockStmts = []models.Stmt{}
 
 	for {
-		if check(models.RIGHT_BRACE) || isAtEnd() {
+		if check(models.RightBrace) || isAtEnd() {
 			break
 		}
 
 		blockStmts = append(blockStmts, declaration())
 	}
 
-	consume([]models.TokenType{models.RIGHT_BRACE}, "Expect '}' after block.")
+	_, err := consume([]models.TokenType{models.RightBrace}, "Expect '}' after block.")
+	if err != nil {
+		return []models.Stmt{models.ErrorStmt{}}
+	}
+
 	return blockStmts
 }
 
 func expressionStatement() models.Stmt {
 	expr := expression()
-	consume([]models.TokenType{models.SEMICOLON}, "Expect ';' after expression.")
+
+	_, err := consume([]models.TokenType{models.SEMICOLON}, "Expect ';' after expression.")
+	if err != nil {
+		return models.ErrorStmt{}
+	}
+
 	return models.ExprStmt{Expression: expr}
 }
 
@@ -289,7 +371,7 @@ func call() models.Expr {
 	expr := primary()
 
 	for {
-		if !match([]models.TokenType{models.LEFT_PAREN}) {
+		if !match([]models.TokenType{models.LeftParen}) {
 			break
 		}
 
@@ -300,9 +382,9 @@ func call() models.Expr {
 }
 
 func finishCall(callee models.Expr) models.Expr {
-	arguments := []models.Expr{}
+	var arguments []models.Expr
 
-	if !check(models.RIGHT_PAREN) {
+	if !check(models.RightParen) {
 		arguments = append(arguments, expression())
 
 		for {
@@ -316,9 +398,9 @@ func finishCall(callee models.Expr) models.Expr {
 		}
 	}
 
-	paren, err := consume([]models.TokenType{models.RIGHT_PAREN}, "Expect ')' after arguments.")
+	paren, err := consume([]models.TokenType{models.RightParen}, "Expect ')' after arguments.")
 	if err != nil {
-		sync()
+		return models.ErrorExpr{}
 	}
 
 	return models.CallExpr{Callee: callee, Paren: *paren, Arguments: arguments}
@@ -340,9 +422,9 @@ func primary() models.Expr {
 	if match([]models.TokenType{models.IDENTIFIER}) {
 		return models.VarExpr{Name: previous()}
 	}
-	if match([]models.TokenType{models.LEFT_PAREN}) {
+	if match([]models.TokenType{models.LeftParen}) {
 		inner := expression()
-		_, err := consume([]models.TokenType{models.RIGHT_PAREN}, "Expect ')' after expression.")
+		_, err := consume([]models.TokenType{models.RightParen}, "Expect ')' after expression.")
 		if err != nil {
 			sync()
 			// Error
@@ -372,7 +454,15 @@ func consume(expectedTypes []models.TokenType, message string) (*models.Token, e
 		}
 	}
 
-	return nil, errors.New(message)
+	err := &ParseError{
+		Line:    peek().Line,
+		Column:  peek().Column,
+		Message: message,
+	}
+	reportError(err)
+	sync()
+
+	return nil, err
 }
 
 // match reports whether the current token

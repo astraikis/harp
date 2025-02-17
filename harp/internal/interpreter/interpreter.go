@@ -100,7 +100,7 @@ func evaluate(expr models.Expr) interface{} {
 func evaluateCallExpr(expr models.CallExpr) interface{} {
 	callee := evaluate(expr.Callee)
 
-	arguments := []models.Expr{}
+	var arguments []models.Expr
 	for i := 0; i < len(expr.Arguments); i++ {
 		arguments = append(arguments, evaluate(expr.Arguments[i]))
 	}
@@ -279,23 +279,3 @@ func isTruthy(value interface{}) bool {
 
 	return true
 }
-
-// func isEqual(left interface{}, right interface{}) bool {
-// 	// if boolLeft, ok := left.(bool); ok {
-// 	// 	if boolRight, ok := right.(bool); ok {
-// 	// 		return boolLeft == boolRight
-// 	// 	} else {
-// 	// 		return false
-// 	// 	}
-// 	// }
-
-// 	// if strLeft, ok := left.(string); ok {
-// 	// 	if strRight, ok := right.(bool); ok {
-// 	// 		return boolLeft == boolRight
-// 	// 	} else {
-// 	// 		return false
-// 	// 	}
-// 	// }
-
-// 	return left == right
-// }

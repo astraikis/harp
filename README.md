@@ -25,29 +25,53 @@ Types:
 - Doubles with `double`
 - Booleans with `bool`
 - Lists with `list`
+- Structs with `struct`
 
-Steps:
-
-- [ ] Scanner (in progress)
-- [ ] Parser
-- [ ] Interpreter
-
----
-
-III`==.\_
-IIIIII//
-IIIII//
-IIII//
-III//
-II//
---'
-
----
-
-III`==.\_
-IIIIII//
-IIIII//
-IIII//
-III//
-
----
+Features:
+- Data types:
+    - [x] Strings
+    - [x] Integers
+    - [x] Doubles
+    - [x] Boolean
+    - [ ] Lists
+    - [ ] Structs
+- Operators:
+  - [x] Addition +
+  - [x] Subtraction -
+  - [x] Multiplication *
+  - [x] Division /
+  - [x] Bang !
+  - [x] Bang equals !=
+  - [x] Equals =
+  - [x] Equals equals ==
+  - [x]
+- Control flow:
+  - [x] For loops
+  - [x] While loops
+- Functions:
+  - [x] Calls
+  - [ ] Declarations
+  - [ ] Static return types
+  - [ ] Function overloads
+- Standard library:
+  - [x] Print - prints to standard output
+  - [x] Clock - returns current time in milliseconds
+  - [ ] Length - overloaded function for getting length of strings and lists
+  - Data structures:
+    - [ ] Stack
+    - [ ] Queue
+    - [ ] Dictionary
+    - [ ] Set
+    - [ ] Linked List
+  - File I/O:
+    - [ ] Read file
+    - [ ] Write file
+    - [ ] Append file
+    - [ ] File exists
+    - [ ] Delete file
+  - Math:
+    - [ ] Square root
+    - [ ] Floor
+    - [ ] Ceiling
+    - [ ] Absolute
+    - [ ] Round - round to a specified number of decimal places

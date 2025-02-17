@@ -1,10 +1,3 @@
-int a = 0;
-int b = 1;
-
-print(a);
-while (a < 500000) {
-    int temp = a;
-    a = b;
-    b = temp + b;
-    print(a);
+func add(int a, int b) {
+    print(a + b);
 }

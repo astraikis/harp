@@ -9,7 +9,7 @@ import (
 )
 
 var source string
-var tokens = []models.Token{}
+var tokens []models.Token
 var start int = 0
 var current int = 0
 var line int = 1

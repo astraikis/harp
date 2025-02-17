@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/astraikis/harp/internal/models"
@@ -81,7 +80,6 @@ func function() models.Stmt {
 		}
 	}
 
-	fmt.Println(parameters)
 	_, _ = consume([]models.TokenType{models.RightParen}, "Expect ')' after function parameters.")
 	_, _ = consume([]models.TokenType{models.LeftBrace}, "Expect '{' before function body.")
 

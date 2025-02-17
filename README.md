@@ -44,7 +44,6 @@ Features:
   - [x] Bang equals !=
   - [x] Equals =
   - [x] Equals equals ==
-  - [x]
 - Control flow:
   - [x] For loops
   - [x] While loops

@@ -1,39 +1,35 @@
 package interpreter
 
-import (
-	"github.com/astraikis/harp/internal/models"
-)
-
-type environment struct {
+type Environment struct {
 	values map[string]interface{}
-	parent *environment
+	parent *Environment
 }
 
-func defineValue(name string, value interface{}, currentEnvironment *environment) {
+func DefineValue(name string, value interface{}, currentEnvironment *Environment) {
 	currentEnvironment.values[name] = value
 }
 
-func getValue(name models.Token, currentEnvironment *environment) interface{} {
-	if val, ok := currentEnvironment.values[name.Lexeme]; ok {
+func GetValue(name string, currentEnvironment *Environment) interface{} {
+	if val, ok := currentEnvironment.values[name]; ok {
 		return val
 	}
 
 	if currentEnvironment.parent != nil {
-		return getValue(name, currentEnvironment.parent)
+		return GetValue(name, currentEnvironment.parent)
 	}
 
 	return nil
 
 }
 
-func assignValue(name models.Token, value interface{}, currentEnvironment *environment) {
-	if _, ok := currentEnvironment.values[name.Lexeme]; ok {
-		currentEnvironment.values[name.Lexeme] = value
+func AssignValue(name string, value interface{}, currentEnvironment *Environment) {
+	if _, ok := currentEnvironment.values[name]; ok {
+		currentEnvironment.values[name] = value
 		return
 	}
 
 	if currentEnvironment.parent != nil {
-		assignValue(name, value, currentEnvironment.parent)
+		AssignValue(name, value, currentEnvironment.parent)
 		return
 	}
 

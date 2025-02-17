@@ -8,12 +8,33 @@ import (
 	"github.com/astraikis/harp/internal/models"
 )
 
-var globals = &environment{values: map[string]interface{}{}, parent: nil}
-var currEnvironment = globals
+var Globals = &Environment{values: map[string]interface{}{}, parent: nil}
+var currEnvironment = Globals
+
+type Interpreter struct {
+	intGlobals *Environment
+	intCurr    *Environment
+}
+
+type Function struct {
+	*models.Function
+	Interpreter *Interpreter
+}
+
+func (f *Function) Call(arguments []models.Expr) interface{} {
+	env := &Environment{values: map[string]interface{}{}, parent: currEnvironment}
+
+	for i, param := range f.Params {
+		DefineValue(param.Name, arguments[i], env)
+	}
+
+	executeBlockStmt(f.Body, env)
+	return nil
+}
 
 func Interpret(statements []models.Stmt) {
-	defineValue("clock", models.Clock{}, currEnvironment)
-	defineValue("print", models.Print{}, currEnvironment)
+	DefineValue("clock", models.Clock{}, currEnvironment)
+	DefineValue("print", models.Print{}, currEnvironment)
 
 	for _, stmt := range statements {
 		execute(stmt)
@@ -27,12 +48,26 @@ func execute(stmt models.Stmt) {
 	case "models.VarStmt":
 		executeVarStmt(stmt.(models.VarStmt))
 	case "models.BlockStmt":
-		executeBlockStmt(stmt.(models.BlockStmt).Statements, &environment{values: map[string]interface{}{}, parent: currEnvironment})
+		executeBlockStmt(stmt.(models.BlockStmt).Statements, &Environment{values: map[string]interface{}{}, parent: currEnvironment})
 	case "models.IfStmt":
 		executeIfStmt(stmt.(models.IfStmt))
 	case "models.WhileStmt":
 		executeWhileStmt(stmt.(models.WhileStmt))
+	case "models.FuncStmt":
+		executeFuncStmt(stmt.(models.FuncStmt))
 	}
+}
+
+func executeFuncStmt(stmt models.FuncStmt) {
+	//function := models.Function{Name: stmt.Name.Lexeme, Params: stmt.Params, Body: stmt.Body}
+	function := &Function{
+		Function: &models.Function{
+			Name:   stmt.Name.Lexeme,
+			Params: stmt.Params,
+			Body:   stmt.Body,
+		},
+	}
+	DefineValue(stmt.Name.Lexeme, function, currEnvironment)
 }
 
 func executeExprStmt(stmt models.ExprStmt) {
@@ -45,10 +80,10 @@ func executeVarStmt(stmt models.VarStmt) {
 		value = evaluate(stmt.Initializer)
 	}
 
-	defineValue(stmt.Name.Lexeme, value, currEnvironment)
+	DefineValue(stmt.Name.Lexeme, value, currEnvironment)
 }
 
-func executeBlockStmt(blockStmts []models.Stmt, blockEnvironment *environment) {
+func executeBlockStmt(blockStmts []models.Stmt, blockEnvironment *Environment) {
 	prevEnvironment := currEnvironment
 	currEnvironment = blockEnvironment
 
@@ -238,12 +273,12 @@ func evaluateLiteralExpr(expr models.LiteralExpr) interface{} {
 }
 
 func evaluateVarExpr(expr models.VarExpr) interface{} {
-	return getValue(expr.Name, currEnvironment)
+	return GetValue(expr.Name.Lexeme, currEnvironment)
 }
 
 func evaluateAssignExpr(expr models.AssignExpr) interface{} {
 	value := evaluate(expr.Value)
-	assignValue(expr.Name, value, currEnvironment)
+	AssignValue(expr.Name.Lexeme, value, currEnvironment)
 	return value
 }
 

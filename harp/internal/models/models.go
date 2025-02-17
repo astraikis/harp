@@ -201,8 +201,22 @@ type FuncParam struct {
 }
 
 type Callable interface {
-	Call([]Expr) interface{}
+	Call(arguments []Expr) interface{}
 	Arity() int
+}
+
+type Function struct {
+	Name   string
+	Params []FuncParam
+	Body   []Stmt
+}
+
+func (f Function) Arity() int {
+	return len(f.Params)
+}
+
+func (f Function) Call(arguments []Expr) interface{} {
+	panic("Call method not implemented.")
 }
 
 type Clock struct{}
